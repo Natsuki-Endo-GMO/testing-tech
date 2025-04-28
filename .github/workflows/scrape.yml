@@ -1,0 +1,38 @@
+name: Scrape The Internet Heroku App
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # 毎日1時（UTC）に実行
+  workflow_dispatch:      # 手動実行も可能
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Download ChromeDriver
+        run: |
+          LATEST=$(curl -sSL https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+          wget https://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+
+      - name: Run scraper
+        run: python scrape_internet.py
